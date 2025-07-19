@@ -1,4 +1,4 @@
-function 9_install_bun --description "Install Bun runtime locally"
+function srk9_install_bun --description "Install Bun runtime locally"
     set -l bun_install_path $HOME/.bun
 
     echo "Installing Bun locally at: $bun_install_path"
