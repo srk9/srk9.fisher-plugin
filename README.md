@@ -9,7 +9,7 @@ NOTE: This package is not POSIX-compatible as it was hand-crafted just for Fish
  - XDG Base Directory compliant
  - No setup needed—it just works!
 
-## Installation via (https://github.com/jorgebucaran/fisher)[Fisher] requires Fish
+## Installation via Fisher which requires Fish
 `fisher install srk9/srk9-fisher-plugin.fish`
 
 ## Dependency Chain
