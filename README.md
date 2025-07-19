@@ -1,6 +1,6 @@
 SrK9 - Fish(er) Plugin (v0.0.1.alpha)
 ===========================
-> Systems Redundency Agent
+> A Systems Redundency & Recovery Agent
 
 NOTE: This package is not POSIX-compatible as it was hand-crafted just for Fish
 
@@ -9,16 +9,19 @@ NOTE: This package is not POSIX-compatible as it was hand-crafted just for Fish
  - XDG Base Directory compliant
  - No setup needed—it just works!
 
-## Installation via (https://github.com/jorgebucaran/fisher)[Fisher]
+## Installation via [https://github.com/jorgebucaran/fisher](Fisher) requires Fish
 `fisher install srk9/srk9-fisher-plugin.fish`
 
-## Dependencies
-- [ ] Fish `which fish`
-  - [ ] Install Fish
-    `brew install fish` && `which fish`
-- [ ] Fisher
+## Dependency Chain
+
+- [ ] Fisher (Requires Fish `which fish`)
     > The following command must be executed inside of fish shell (type "fish")
     `curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher`
+
+- [ ] Fish `which fish` (Requires Brew `which brew`) as the easiest way to install fish is via Homebrew
+      `brew install fish` && `which fish`
+
+- [ ] Brew `which brew`
 
 
 ## TIPS:
