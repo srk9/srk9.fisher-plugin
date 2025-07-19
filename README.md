@@ -12,7 +12,13 @@ NOTE: This package is not POSIX-compatible as it was hand-crafted just for Fish
 ## Installation via Fisher which requires Fish
 `fisher install srk9/srk9-fisher-plugin.fish`
 
-## Dependency Chain
+## Update
+`fisher update srk9/srk9.fisher-plugin`
+
+## Uninstall
+
+
+### Dependency Chain
 
 - [ ] Fisher (Requires Fish `which fish`)
     > The following command must be executed inside of fish shell (type "fish")
