@@ -1,3 +1,3 @@
-function srk9_install_rosetta
+function srk9-install-rosetta
     echo 'A' | sudo softwareupdate --install-rosetta
 end

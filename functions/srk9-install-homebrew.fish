@@ -1,28 +1,29 @@
-function srk9_install_homebrew --description "Install Homebrew locally"
-    set -l homebrew_local_path $HOME/.local/opt/homebrew
-    # set -l homebrew_global_path /opt/homebrew
+function srk9-install-homebrew --description "Install Homebrew locally"
 
-    echo "Installing Homebrew locally to: $homebrew_local_path"
+    set -l homebrew_global_install_path /opt/homebrew
+
+    echo "Installing Homebrew locally to: $homebrew_global_install_path"
     echo "========================================================"
 
     # Create installation directory
-    mkdir -p $homebrew_local_path
+    mkdir -p $homebrew_global_install_path
 
     # Download and extract Homebrew
-    curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C $homebrew_local_path
+    curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
+    #curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C $homebrew_local_path
 
     # Add to shell environment
-    echo "HOMEBREW_LOCAL_INSTALL_PATH=$homebrew_local_path" >> $HOME/.zprofile
-    echo "eval \"\$($homebrew_local_path/bin/brew shellenv)\"" >> $HOME/.zprofile
+    echo "HOMEBREW_GLOBAL_INSTALL_PATH=$homebrew_global_install_path" >> $HOME/.zprofile
+    echo "eval \"\$($homebrew_global_install_path/bin/brew shellenv)\"" >> $HOME/.zprofile
 
     # Set Fish environment
-    set -Ux HOMEBREW_LOCAL_INSTALL_PATH $homebrew_local_path
-    eval ($homebrew_local_path/bin/brew shellenv)
+    set -Ux HOMEBREW_GLOBAL_INSTALL_PATH $homebrew_global_install_path
+    eval ($homebrew_global_install_path/bin/brew shellenv)
 
     echo "========================================================"
 
     # Activate in current session
-    source $HOME/.zprofile
+    # source $HOME/.zprofile
 
     echo "========================================================"
     echo "Testing Homebrew installation..."

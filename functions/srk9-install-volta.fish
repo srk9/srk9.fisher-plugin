@@ -1,4 +1,4 @@
-function srk9_install_volta --description "Install Volta Node.js version manager"
+function srk9-install-volta --description "Install Volta Node.js version manager"
     echo "Installing Volta Node.js version manager..."
     echo "========================================================"
 
