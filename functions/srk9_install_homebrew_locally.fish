@@ -1,6 +1,6 @@
 function srk9_install_homebrew --description "Install Homebrew locally"
     set -l homebrew_local_path $HOME/.local/opt/homebrew
-    set -l homebrew_global_path /opt/homebrew
+    # set -l homebrew_global_path /opt/homebrew
 
     echo "Installing Homebrew locally to: $homebrew_local_path"
     echo "========================================================"
