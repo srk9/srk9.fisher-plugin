@@ -1,34 +1,53 @@
-srk9.bootstapper -> Fish(er) Plugin (v0.0.1.alpha)
-===========================
-> A Systems Redundency & Recovery Agent
+# srk9.bootstrapper
 
-NOTE: This package is not POSIX-compatible as it was hand-crafted just for Fish
+Fisher plugin for bootstrapping and syncing srk9 environments.
 
- - 100% pure Fish—so simple to contribute to or tweak
- - Tab-completable for seamless shell integration
- - XDG Base Directory compliant
- - No setup needed—it just works!
+## Installation
 
-## Installation via Fisher which requires Fish
-`fisher install srk9/bootstrapper.fish`
+```fish
+fisher install srk9/srk9.bootstrapper
+```
 
-## Update
-`fisher update srk9/bootstrapper`
+## Commands
 
-## Uninstall
+### Bootstrap
+```fish
+srk9-bootstrap              # Full system bootstrap
+```
 
+### Sync
+```fish
+srk9-sync status            # Check sync.srk9.io status
+srk9-sync fish pull         # Pull fish functions to cache
+srk9-sync claude pull       # Pull claude assets to cache
+```
 
-### Dependency Chain
+### Install Tools
+```fish
+srk9-install-homebrew       # Install Homebrew (global)
+srk9-install-homebrew-locally  # Install Homebrew (local)
+srk9-install-bun            # Install Bun runtime
+srk9-install-volta          # Install Volta (Node manager)
+srk9-install-claude         # Install Claude CLI
+srk9-install-rosetta        # Install Rosetta (Apple Silicon)
+```
 
-- [ ] Fisher (Requires Fish `which fish`)
-    > The following command must be executed inside of fish shell (type "fish")
-    `curl -sL https://raw.githubusercontent.com/srk9/fisher/main/functions/fisher.fish | source && fisher install srk9/fisher`
+### Utilities
+```fish
+srk9-list-functions         # List all srk9 functions
+srk9-backup-dots            # Backup dotfiles
+```
 
-- [ ] Fish `which fish` (Requires Brew `which brew`) as the easiest way to install fish is via Homebrew
-      `brew install fish` && `which fish`
+## Cache Directory
 
-- [ ] Brew `which brew`
+Synced assets are stored in:
+```
+~/.local/cache/srk9/sync/
+├── fish/       # Fish functions
+└── claude/     # Claude assets
+```
 
+## Related
 
-## TIPS:
-Whenever you install or remove a plugin from the command line, Fisher keeos track of all the installed plugins in $__fish_config_dir/fish_plugins. Add this file to your dotfiles or version control to easily share your configuration across different systems.
+- [sync.srk9.io](https://sync.srk9.io) - Asset sync service
+- [srk9.sync](https://github.com/srk9/srk9.sync) - Service + CLI
