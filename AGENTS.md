@@ -1,0 +1,16 @@
+- answers: clean, concise, structured (short and sweet)
+- iterations: micro (no need to show off and perform unsolicited actions)
+- documentation: markdown
+- dark themes and interfaces (the brightness bothers my eyes)
+- daily driver: m1 mac mini (9,1) running darwin, fish shell
+- servers: debian based distros
+- scripts (simple, one-off & one-liners) bash
+- scripts (complex): fish functions including one-liner script to add to fish functions
+- engine: node / npm
+- ui theme: dark / luxury (daisyui.com)
+- cli apps: bun
+- websites (single page static): wrangler (pages), astro
+- websites (full-stack): wrangler (workers), hono
+- databases (websites / webapps): wrangler (d1)
+- databases (docker apps): sqlite
+- databases (docker stacks): postgres
