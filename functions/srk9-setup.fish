@@ -1,157 +1,158 @@
 function srk9-setup --description "Interactive TUI for setting up development environment"
-    # Colors
-    set -l reset (set_color normal)
-    set -l bold (set_color --bold)
-    set -l dim (set_color brblack)
-    set -l green (set_color green)
-    set -l red (set_color red)
-    set -l yellow (set_color yellow)
-    set -l cyan (set_color cyan)
+    # Check for whiptail or dialog
+    set -l dialog_cmd ""
+    if command -q whiptail
+        set dialog_cmd whiptail
+    else if command -q dialog
+        set dialog_cmd dialog
+    else
+        echo "This setup requires 'whiptail' or 'dialog' for the TUI."
+        echo ""
+        echo "Install with:"
+        echo "  macOS:  brew install newt    # provides whiptail"
+        echo "  Debian: apt install whiptail"
+        echo "  Fedora: dnf install newt"
+        echo ""
+        echo "Or run individual installers directly:"
+        echo "  srk9-install-bun"
+        echo "  srk9-install-volta"
+        echo "  etc."
+        return 1
+    end
 
-    # Tool definitions: name, install_function, check_command
+    # Tool definitions: name|description|install_function|check_command
     set -l tools \
-        "bun:srk9-install-bun:bun" \
-        "volta:srk9-install-volta:volta" \
-        "rust:srk9-install-rust:cargo" \
-        "python:srk9-install-python:pyenv" \
-        "go:srk9-install-go:go" \
-        "devbox:srk9-install-devbox:devbox" \
-        "homebrew:srk9-install-homebrew-locally:brew" \
-        "claude:srk9-install-claude:claude"
+        "bun|JavaScript runtime & toolkit|srk9-install-bun|bun" \
+        "volta|Node.js version manager|srk9-install-volta|volta" \
+        "rust|Rust programming language|srk9-install-rust|cargo" \
+        "python|Python via pyenv|srk9-install-python|pyenv" \
+        "go|Go programming language|srk9-install-go|go" \
+        "devbox|Nix-based dev environments|srk9-install-devbox|devbox" \
+        "homebrew|Package manager (local)|srk9-install-homebrew-locally|brew" \
+        "claude|Claude CLI assistant|srk9-install-claude|claude"
 
-    function __srk9_check_installed --argument-names cmd
-        command -q $cmd; and echo "installed"; or echo "not installed"
-    end
-
-    function __srk9_draw_header
-        clear
-        echo ""
-        echo "  ╔═══════════════════════════════════════════════════════╗"
-        echo "  ║           $argv[1]SRK9 Development Setup$argv[2]                  ║"
-        echo "  ║           $argv[3]XDG Compliant • Sudo-Free$argv[2]               ║"
-        echo "  ╚═══════════════════════════════════════════════════════╝"
-        echo ""
-    end
-
-    # Initialize directories first
+    # Initialize directories if needed
     if not set -q SRK9_OPT_DIR
-        __srk9_draw_header $bold $reset $dim
-        echo "  Initializing XDG directories..."
-        srk9-init-dirs
-        echo ""
-        read -l -P "  Press Enter to continue..." _
+        srk9-init-dirs >/dev/null 2>&1
     end
 
     # Main menu loop
     while true
-        __srk9_draw_header $bold $reset $dim
-
-        echo "  $bold STATUS $reset"
-        echo "  ─────────────────────────────────────────────────────────"
-
+        # Build menu items with status
+        set -l menu_items
         set -l idx 1
         for tool_def in $tools
-            set -l parts (string split ":" $tool_def)
+            set -l parts (string split "|" $tool_def)
             set -l name $parts[1]
-            set -l check_cmd $parts[3]
+            set -l desc $parts[2]
+            set -l check_cmd $parts[4]
 
-            set -l status (__srk9_check_installed $check_cmd)
-            if test "$status" = "installed"
-                set -l icon "$green✓$reset"
-                set -l status_text "$green installed$reset"
+            if command -q $check_cmd
+                set -a menu_items "$idx" "[$name] $desc ✓"
             else
-                set -l icon "$dim○$reset"
-                set -l status_text "$dim not installed$reset"
+                set -a menu_items "$idx" "[$name] $desc"
             end
-
-            printf "  %s %d. %-12s %s\n" $icon $idx $name $status_text
             set idx (math $idx + 1)
         end
 
-        echo ""
-        echo "  ─────────────────────────────────────────────────────────"
-        echo "  $bold ACTIONS $reset"
-        echo "   a) Install all missing tools"
-        echo "   i) Install specific tool (enter number)"
-        echo "   s) Show environment (srk9-env)"
-        echo "   q) Quit"
-        echo ""
+        # Add action items
+        set -a menu_items "A" "Install ALL missing tools"
+        set -a menu_items "S" "Show environment status"
+        set -a menu_items "Q" "Quit"
 
-        read -l -P "  Select option: " choice
+        # Show main menu
+        set -l choice ($dialog_cmd \
+            --title "SRK9 Development Setup" \
+            --backtitle "XDG Compliant • Sudo-Free • Local Install" \
+            --menu "Select a tool to install or action to perform:\n\n✓ = already installed" \
+            20 60 12 \
+            $menu_items \
+            3>&1 1>&2 2>&3)
+
+        # Handle cancel/escape
+        if test $status -ne 0
+            clear
+            echo "Setup cancelled."
+            return 0
+        end
 
         switch $choice
-            case q Q
+            case Q q
+                clear
                 echo ""
-                echo "  $cyan Happy coding! $reset"
+                echo "Happy coding!"
                 echo ""
                 return 0
 
-            case a A
-                __srk9_draw_header $bold $reset $dim
-                echo "  $bold Installing all missing tools... $reset"
+            case S s
+                clear
+                srk9-env
+                echo ""
+                read -l -P "Press Enter to continue..." _
+
+            case A a
+                clear
+                echo "════════════════════════════════════════════════════════"
+                echo "  Installing all missing tools..."
+                echo "════════════════════════════════════════════════════════"
                 echo ""
 
                 for tool_def in $tools
-                    set -l parts (string split ":" $tool_def)
+                    set -l parts (string split "|" $tool_def)
                     set -l name $parts[1]
-                    set -l install_fn $parts[2]
-                    set -l check_cmd $parts[3]
+                    set -l install_fn $parts[3]
+                    set -l check_cmd $parts[4]
 
                     if not command -q $check_cmd
-                        echo "  ────────────────────────────────────────"
-                        echo "  Installing $bold$name$reset..."
-                        echo "  ────────────────────────────────────────"
+                        echo "────────────────────────────────────────────────────────"
+                        echo "  Installing $name..."
+                        echo "────────────────────────────────────────────────────────"
                         $install_fn
                         echo ""
                     else
-                        echo "  $green✓$reset $name already installed"
+                        echo "✓ $name already installed"
                     end
                 end
 
                 echo ""
-                read -l -P "  Press Enter to continue..." _
-
-            case i I
-                read -l -P "  Enter tool number (1-8): " num
-
-                if test -n "$num" -a "$num" -ge 1 -a "$num" -le 8 2>/dev/null
-                    set -l tool_def $tools[$num]
-                    set -l parts (string split ":" $tool_def)
-                    set -l name $parts[1]
-                    set -l install_fn $parts[2]
-
-                    __srk9_draw_header $bold $reset $dim
-                    echo "  Installing $bold$name$reset..."
-                    echo ""
-                    $install_fn
-                    echo ""
-                    read -l -P "  Press Enter to continue..." _
-                else
-                    echo "  $red Invalid selection $reset"
-                    sleep 1
-                end
-
-            case s S
-                __srk9_draw_header $bold $reset $dim
-                srk9-env
-                echo ""
-                read -l -P "  Press Enter to continue..." _
-
-            case 1 2 3 4 5 6 7 8
-                set -l tool_def $tools[$choice]
-                set -l parts (string split ":" $tool_def)
-                set -l name $parts[1]
-                set -l install_fn $parts[2]
-
-                __srk9_draw_header $bold $reset $dim
-                echo "  Installing $bold$name$reset..."
-                echo ""
-                $install_fn
-                echo ""
-                read -l -P "  Press Enter to continue..." _
+                echo "════════════════════════════════════════════════════════"
+                echo "  Installation complete!"
+                echo "════════════════════════════════════════════════════════"
+                read -l -P "Press Enter to continue..." _
 
             case '*'
-                # Invalid input, just refresh
+                # Numeric selection
+                if test "$choice" -ge 1 -a "$choice" -le 8 2>/dev/null
+                    set -l tool_def $tools[$choice]
+                    set -l parts (string split "|" $tool_def)
+                    set -l name $parts[1]
+                    set -l install_fn $parts[3]
+                    set -l check_cmd $parts[4]
+
+                    if command -q $check_cmd
+                        # Already installed - offer info
+                        $dialog_cmd \
+                            --title "$name" \
+                            --msgbox "$name is already installed.\n\nLocation: "(command -v $check_cmd) \
+                            10 50
+                    else
+                        # Confirm installation
+                        if $dialog_cmd \
+                            --title "Install $name" \
+                            --yesno "Install $name?\n\nThis will install to \$SRK9_OPT_DIR" \
+                            10 50
+
+                            clear
+                            echo "════════════════════════════════════════════════════════"
+                            echo "  Installing $name..."
+                            echo "════════════════════════════════════════════════════════"
+                            echo ""
+                            $install_fn
+                            echo ""
+                            read -l -P "Press Enter to continue..." _
+                        end
+                    end
+                end
         end
     end
 end
