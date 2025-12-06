@@ -11,8 +11,12 @@ if [[ "$OSTYPE" != "darwin"* ]] && [[ "$OSTYPE" != "linux-gnu"* ]]; then
     exit 1
 fi
 
-# Install Homebrew if not present
-if ! command -v brew &> /dev/null; then
+# Detect Homebrew (including custom installations)
+BREW_PATH=$(which brew 2>/dev/null || true)
+
+if [ -n "$BREW_PATH" ]; then
+    echo "✓ Homebrew already installed at: $BREW_PATH"
+else
     echo ""
     echo "Installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -27,8 +31,6 @@ if ! command -v brew &> /dev/null; then
     else
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
     fi
-else
-    echo "✓ Homebrew already installed"
 fi
 
 # Install Fish if not present
