@@ -1,6 +1,18 @@
-function srk9-install-docker --description "Install Docker Desktop (macOS) or Docker Engine (Linux)"
-    echo "Installing Docker..."
+function srk9-install-docker --description "Install Docker (with deviation documentation)"
     echo "========================================================"
+    echo "Docker Installation"
+    echo "========================================================"
+    echo ""
+    echo "DEVIATION: Docker requires elevated privileges"
+    echo "--------------------------------------------"
+    echo "What:       Docker daemon requires root/admin access"
+    echo "Why:        Kernel access for containerization (cgroups, namespaces)"
+    echo "Impact:     Cannot install Docker without sudo/admin privileges"
+    echo "Future Fix: Use rootless Docker mode or Podman as alternative"
+    echo ""
+    echo "See: SPEC.md for full deviation documentation"
+    echo "========================================================"
+    echo ""
 
     # Check if already installed
     if command -q docker
@@ -12,73 +24,58 @@ function srk9-install-docker --description "Install Docker Desktop (macOS) or Do
 
     switch $os
         case Darwin
-            echo "Detected macOS - Installing Docker Desktop..."
+            echo "macOS detected"
             echo ""
-            echo "Docker Desktop requires manual download from:"
-            echo "  https://www.docker.com/products/docker-desktop/"
+            echo "Options:"
+            echo "  1. Docker Desktop (requires admin): brew install --cask docker"
+            echo "  2. Colima (lighter alternative):    brew install colima docker"
+            echo "  3. Podman (rootless alternative):   brew install podman"
             echo ""
-            echo "Or install via Homebrew:"
-            echo "  brew install --cask docker"
+            echo "Recommended for least-privilege: Podman"
+            echo "  brew install podman"
+            echo "  podman machine init"
+            echo "  podman machine start"
             echo ""
 
-            # Attempt Homebrew installation if available
             if command -q brew
-                read -l -P "Install Docker Desktop via Homebrew? [y/N] " confirm
+                read -l -P "Install Podman (rootless) via Homebrew? [y/N] " confirm
                 if test "$confirm" = "y" -o "$confirm" = "Y"
-                    brew install --cask docker
+                    brew install podman
                     echo ""
-                    echo "Docker Desktop installed. Please launch it from Applications."
+                    echo "Podman installed. Initialize with:"
+                    echo "  podman machine init"
+                    echo "  podman machine start"
                 end
             end
 
         case Linux
-            echo "Detected Linux - Installing Docker Engine..."
+            echo "Linux detected"
+            echo ""
+            echo "Options:"
+            echo "  1. Docker Engine (requires sudo) - see docs.docker.com"
+            echo "  2. Rootless Docker - https://docs.docker.com/engine/security/rootless/"
+            echo "  3. Podman (rootless) - apt/dnf install podman"
+            echo ""
+            echo "Recommended for least-privilege: Podman or Rootless Docker"
             echo ""
 
-            # Detect Linux distribution
+            # Detect distribution
             if test -f /etc/os-release
                 source /etc/os-release
+                echo "Detected: $ID"
+                echo ""
+                echo "To install Podman (no sudo for runtime):"
 
                 switch $ID
                     case ubuntu debian
-                        echo "Installing Docker for $ID..."
-                        # Add Docker's official GPG key
-                        sudo apt-get update
-                        sudo apt-get install -y ca-certificates curl gnupg
-                        sudo install -m 0755 -d /etc/apt/keyrings
-                        curl -fsSL https://download.docker.com/linux/$ID/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-                        sudo chmod a+r /etc/apt/keyrings/docker.gpg
-
-                        # Add the repository
-                        echo "deb [arch="(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$ID "(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-                        # Install Docker Engine
-                        sudo apt-get update
-                        sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-                        # Add user to docker group
-                        sudo usermod -aG docker $USER
-
+                        echo "  sudo apt install podman"
                     case fedora
-                        echo "Installing Docker for Fedora..."
-                        sudo dnf -y install dnf-plugins-core
-                        sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
-                        sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-                        sudo systemctl start docker
-                        sudo systemctl enable docker
-                        sudo usermod -aG docker $USER
-
+                        echo "  sudo dnf install podman"
+                    case arch
+                        echo "  sudo pacman -S podman"
                     case '*'
-                        echo "Unsupported Linux distribution: $ID"
-                        echo "Please follow Docker's official installation guide:"
-                        echo "  https://docs.docker.com/engine/install/"
-                        return 1
+                        echo "  Check your package manager for 'podman'"
                 end
-            else
-                echo "Cannot detect Linux distribution."
-                echo "Please follow Docker's official installation guide:"
-                echo "  https://docs.docker.com/engine/install/"
-                return 1
             end
 
         case '*'
@@ -86,7 +83,9 @@ function srk9-install-docker --description "Install Docker Desktop (macOS) or Do
             return 1
     end
 
+    echo ""
     echo "========================================================"
-    echo "Docker installation completed!"
-    echo "Note: You may need to log out and back in for group changes to take effect."
+    echo "Note: This function does not auto-install Docker"
+    echo "due to sudo requirements. See options above."
+    echo "========================================================"
 end

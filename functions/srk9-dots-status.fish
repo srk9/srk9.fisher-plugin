@@ -1,3 +1,4 @@
+
 function srk9-dots-status --description "Show dotfiles management status"
     set -l dots_dir $HOME/.dotfiles
 

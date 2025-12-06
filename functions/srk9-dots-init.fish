@@ -1,3 +1,4 @@
+
 function srk9-dots-init --description "Initialize dotfiles management system"
     set -l dots_dir $HOME/.dotfiles
 

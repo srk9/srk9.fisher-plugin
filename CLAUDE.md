@@ -6,7 +6,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 SrK9 Bootstrapper is a Fish shell plugin for Fisher that provides a Systems Redundancy & Recovery Agent. It's designed as a collection of Fish functions for installing and managing development tools locally on macOS and Linux systems. The plugin is 100% pure Fish and provides tab-completable functions for seamless shell integration.
 
+## Principles
+
+1. **Bootstrapper Installation** - MUST be sudo-free, MUST use XDG structure
+2. **XDG Compliance** - Follow XDG Base Directory Specification strictly
+3. **Least Privilege** - Avoid sudo in tool installations where possible
+4. **Document Deviations** - Any deviation must be documented (see SPEC.md)
+
 ## Architecture
+
+### XDG Directory Structure
+
+```
+SRK9_CONFIG_DIR  = $XDG_CONFIG_HOME/srk9   # ~/.config/srk9
+SRK9_CACHE_DIR   = $XDG_CACHE_HOME/srk9    # ~/.cache/srk9
+SRK9_STATE_DIR   = $XDG_STATE_HOME/srk9    # ~/.local/state/srk9
+SRK9_SHARE_DIR   = $XDG_DATA_HOME/srk9     # ~/.local/share/srk9
+SRK9_BIN_DIR     = ~/.local/bin            # User executables
+SRK9_OPT_DIR     = $SRK9_SHARE_DIR/opt     # Tool installations
+```
 
 ### Core Components
 
@@ -14,13 +32,12 @@ SrK9 Bootstrapper is a Fish shell plugin for Fisher that provides a Systems Redu
   - **Installation**: `srk9-install-*.fish` - Install development tools
   - **Uninstallation**: `srk9-uninstall-*.fish` - Remove installed tools
   - **Dotfiles**: `srk9-dots-*.fish` - Dotfiles management system
-  - **Utilities**: `srk9-status.fish`, `srk9-help.fish`, `srk9-list-functions.fish`
+  - **Utilities**: `srk9-status.fish`, `srk9-help.fish`, `srk9-env.fish`
 
 - **completions/**: Tab-completion definitions
-  - `srk9.fish` - Completions for all srk9 commands
 
 - **conf.d/**: Fish configuration that runs on shell startup
-  - `09-srk9-init.fish` - Aliases and development helper functions
+  - `09-srk9-init.fish` - XDG environment setup and aliases
 
 ### Plugin Structure
 
@@ -32,17 +49,27 @@ This is a Fisher plugin following Fish shell conventions:
 
 ## Available Functions
 
-### Installation Functions
+### Environment Setup
 ```fish
-srk9-install-bun        # Install Bun runtime locally
-srk9-install-homebrew   # Install Homebrew globally
-srk9-install-volta      # Install Volta Node.js manager
-srk9-install-rosetta    # Install Rosetta (Apple Silicon)
-srk9-install-claude     # Install Claude CLI
-srk9-install-rust       # Install Rust via rustup
-srk9-install-python     # Install Python via pyenv
-srk9-install-go         # Install Go programming language
-srk9-install-docker     # Install Docker
+srk9-init-dirs          # Initialize XDG directory structure
+srk9-env                # Display environment variables
+```
+
+### Installation Functions (XDG Compliant, No Sudo)
+```fish
+srk9-install-bun                # Install Bun to $SRK9_OPT_DIR/bun
+srk9-install-volta              # Install Volta to $SRK9_OPT_DIR/volta
+srk9-install-rust               # Install Rust to $SRK9_OPT_DIR/{cargo,rustup}
+srk9-install-python             # Install pyenv to $SRK9_OPT_DIR/pyenv
+srk9-install-go                 # Install Go to $SRK9_OPT_DIR/go
+srk9-install-homebrew-locally   # Install Homebrew to $SRK9_OPT_DIR/homebrew
+srk9-install-claude             # Install Claude CLI (via Bun)
+```
+
+### Installation Functions (Documented Deviations)
+```fish
+srk9-install-docker     # Docker (requires sudo - see deviation docs)
+srk9-install-rosetta    # Rosetta (requires sudo - Apple requirement)
 ```
 
 ### Uninstall Functions
@@ -70,69 +97,53 @@ srk9-help               # Show help and available commands
 srk9-list-functions     # List all srk9 functions
 ```
 
-## Common Development Commands
+## Installation
 
-### Plugin Development
-```fish
-# Development helpers (from conf.d)
-dev-commit      # Git add and commit
-dev-push        # Push to origin
-dev-update      # Update Fisher plugin
-dev-upgrade     # Full pipeline: commit -> push -> update
-```
+### Prerequisites
+- Fish shell (user must install)
 
-### Fisher Plugin Management
-```fish
-fisher install srk9/bootstrapper    # Install plugin
-fisher update srk9/bootstrapper     # Update plugin
-fisher remove srk9/bootstrapper     # Uninstall plugin
-```
-
-## Installation Requirements
-
-1. **Fish Shell** - Required base shell
-2. **Fisher** - Fish plugin manager
-3. **Homebrew** - Recommended for installing Fish
-
-### Dependency Chain
+### One-liner (sudo-free)
 ```bash
-# Install Homebrew first
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+curl -fsSL https://raw.githubusercontent.com/jellylabs-ltd/srk9-bootstrapper/master/install.sh | bash
+```
 
-# Install Fish via Homebrew
-brew install fish
-
-# Install Fisher inside Fish shell
+### Manual Installation
+```fish
+# Install Fisher
 curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher
 
-# Install SrK9 plugin
-fisher install srk9/bootstrapper
+# Install srk9-bootstrapper
+fisher install jellylabs-ltd/srk9-bootstrapper
+
+# Initialize directories
+srk9-init-dirs
 ```
 
 ## Key Features
 
-- **Local Installation Focus**: All tools install locally to avoid system conflicts
-- **XDG Base Directory Compliant**: Follows proper directory standards
+- **Sudo-Free Installation**: Bootstrapper installs without elevated privileges
+- **XDG Base Directory Compliant**: All paths follow XDG specification
+- **Local Installation Focus**: All tools install to `$SRK9_OPT_DIR`
+- **Single PATH Entry**: Symlinks in `~/.local/bin`
 - **Tab Completion**: All functions are tab-completable in Fish
-- **Shell Environment Management**: Automatically sets up PATH and environment variables
-- **Cross-shell Compatibility**: Adds configuration for both Fish and zsh
-- **Dotfiles Management**: Complete system for managing configuration files
 - **Idempotent Design**: Safe to run functions multiple times
+- **Documented Deviations**: Any sudo requirements are documented in SPEC.md
 
 ## Coding Conventions
 
 When adding new functions:
 1. Use the naming convention `srk9-<action>-<tool>.fish`
 2. Include a `--description` in the function definition
-3. Print progress with `echo "========..."`
-4. Check if tool is already installed before proceeding
-5. Add to both Fish path and `~/.zprofile` for zsh compatibility
-6. Test installation at the end and provide feedback
-7. Add completions to `completions/srk9.fish`
+3. Use `$SRK9_OPT_DIR` for tool installations
+4. Create symlinks in `$SRK9_BIN_DIR`
+5. Set environment variables with `set -Ux`
+6. If sudo is required, document as deviation (see SPEC.md format)
+7. Check if tool is already installed before proceeding
+8. Add completions to `completions/srk9.fish`
 
 ## Important Notes
 
-- All installation functions create local installations (in `$HOME/.local` or `$HOME/.toolname`)
-- Functions automatically add tools to both Fish environment and zsh profile
-- The plugin is designed to be idempotent - safe to run multiple times
-- No setup required after Fisher installation - functions are immediately available
+- All installation functions use XDG-compliant paths
+- Tools install to `$SRK9_OPT_DIR` (~/.local/share/srk9/opt/)
+- Binaries symlink to `$SRK9_BIN_DIR` (~/.local/bin/)
+- See SPEC.md for full specification and deviation documentation

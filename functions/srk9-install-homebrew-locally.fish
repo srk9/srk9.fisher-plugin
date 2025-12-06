@@ -1,39 +1,57 @@
-function srk9-install-homebrew-locally --description "Install Homebrew locally"
-    set -l homebrew_local_path $HOME/.local/opt/homebrew
-    # set -l homebrew_global_path /opt/homebrew
+function srk9-install-homebrew-locally --description "Install Homebrew locally (XDG compliant, no sudo)"
+    # Use XDG-compliant path
+    set -q SRK9_OPT_DIR; or set -l SRK9_OPT_DIR $HOME/.local/share/srk9/opt
+    set -q SRK9_BIN_DIR; or set -l SRK9_BIN_DIR $HOME/.local/bin
+    set -l homebrew_prefix $SRK9_OPT_DIR/homebrew
 
-    echo "Installing Homebrew locally to: $homebrew_local_path"
     echo "========================================================"
+    echo "Installing Homebrew locally (no sudo required)"
+    echo "========================================================"
+    echo "Install path: $homebrew_prefix"
+    echo ""
 
-    # Create installation directory
-    mkdir -p $homebrew_local_path
+    # Check if already installed
+    if test -x $homebrew_prefix/bin/brew
+        echo "Homebrew is already installed at $homebrew_prefix"
+        echo "Version: "($homebrew_prefix/bin/brew --version | head -1)
+        return 0
+    end
+
+    # Ensure directories exist
+    mkdir -p $homebrew_prefix
+    mkdir -p $SRK9_BIN_DIR
 
     # Download and extract Homebrew
-    curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C $homebrew_local_path
+    echo "Downloading Homebrew..."
+    curl -fsSL https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C $homebrew_prefix
 
-    # Add to shell environment
-    echo "HOMEBREW_LOCAL_INSTALL_PATH=$homebrew_local_path" >> $HOME/.zprofile
-    echo "eval \"\$($homebrew_local_path/bin/brew shellenv)\"" >> $HOME/.zprofile
+    # Set environment variables
+    set -Ux HOMEBREW_PREFIX $homebrew_prefix
+    set -Ux HOMEBREW_CELLAR $homebrew_prefix/Cellar
+    set -Ux HOMEBREW_REPOSITORY $homebrew_prefix
 
-    # Set Fish environment
-    set -Ux HOMEBREW_LOCAL_INSTALL_PATH $homebrew_local_path
-    eval ($homebrew_local_path/bin/brew shellenv)
+    # Add to PATH
+    fish_add_path $homebrew_prefix/bin
+    fish_add_path $homebrew_prefix/sbin
 
+    # Create symlink in bin directory
+    if test -x $homebrew_prefix/bin/brew
+        ln -sf $homebrew_prefix/bin/brew $SRK9_BIN_DIR/brew
+        echo "✓ Created symlink in $SRK9_BIN_DIR"
+    end
+
+    echo ""
+    echo "========================================================"
+    echo "Homebrew installation completed!"
     echo "========================================================"
 
-    # Activate in current session
-    source $HOME/.zprofile
-
-    echo "========================================================"
-    echo "Testing Homebrew installation..."
-
-    if command -q brew
-        echo "Homebrew installed successfully at: "(which brew)
+    # Test installation
+    if test -x $homebrew_prefix/bin/brew
+        echo "Homebrew version: "($homebrew_prefix/bin/brew --version | head -1)
+        echo ""
+        echo "Note: This is a local installation without sudo."
+        echo "Some formulae may not work correctly without system access."
     else
         echo "Installation may have failed. Check the output above."
     end
-
-    echo "========================================================"
-    echo "To activate Homebrew in zsh, run: source ~/.zprofile"
-    echo "For Fish, Homebrew is already available in this session."
 end

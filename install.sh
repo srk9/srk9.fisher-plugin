@@ -4,6 +4,12 @@ set -e
 echo "========================================"
 echo "SrK9 Bootstrapper Installation"
 echo "========================================"
+echo ""
+echo "Principles:"
+echo "  - No sudo required"
+echo "  - XDG Base Directory compliant"
+echo "  - Local-first installation"
+echo ""
 
 # Check if running on macOS or Linux
 if [[ "$OSTYPE" != "darwin"* ]] && [[ "$OSTYPE" != "linux-gnu"* ]]; then
@@ -11,36 +17,22 @@ if [[ "$OSTYPE" != "darwin"* ]] && [[ "$OSTYPE" != "linux-gnu"* ]]; then
     exit 1
 fi
 
-# Detect Homebrew (including custom installations)
-BREW_PATH=$(which brew 2>/dev/null || true)
-
-if [ -n "$BREW_PATH" ]; then
-    echo "✓ Homebrew already installed at: $BREW_PATH"
-else
-    echo ""
-    echo "Installing Homebrew..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-    # Add Homebrew to PATH for this session
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        if [[ $(uname -m) == "arm64" ]]; then
-            eval "$(/opt/homebrew/bin/brew shellenv)"
-        else
-            eval "$(/usr/local/bin/brew shellenv)"
-        fi
-    else
-        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-    fi
-fi
-
-# Install Fish if not present
+# Check for Fish shell (REQUIRED - user must install)
 if ! command -v fish &> /dev/null; then
+    echo "Error: Fish shell is required but not installed."
     echo ""
-    echo "Installing Fish shell..."
-    brew install fish
-else
-    echo "✓ Fish shell already installed"
+    echo "Please install Fish first:"
+    echo "  macOS:  brew install fish"
+    echo "          or download from https://fishshell.com"
+    echo "  Debian: apt install fish"
+    echo "  Fedora: dnf install fish"
+    echo "  Arch:   pacman -S fish"
+    echo ""
+    echo "Then re-run this installer."
+    exit 1
 fi
+
+echo "✓ Fish shell found: $(which fish)"
 
 # Get Fish path
 FISH_PATH=$(which fish)
@@ -61,7 +53,12 @@ $FISH_PATH -c '
     # Install srk9-bootstrapper plugin
     echo ""
     echo "Installing srk9-bootstrapper plugin..."
-    fisher install srk9/srk9.bootstrapper
+    fisher install jellylabs-ltd/srk9-bootstrapper
+
+    # Initialize XDG directory structure
+    echo ""
+    echo "Initializing XDG directory structure..."
+    srk9-init-dirs
 
     echo ""
     echo "========================================"
@@ -69,12 +66,13 @@ $FISH_PATH -c '
     echo "========================================"
     echo ""
     echo "Available commands:"
-    echo "  srk9-bootstrap              # Full system bootstrap"
-    echo "  srk9-sync status            # Check sync service"
+    echo "  srk9-env                    # Show environment variables"
+    echo "  srk9-help                   # Show all commands"
+    echo "  srk9-status                 # Check installed tools"
     echo "  srk9-install-*              # Install individual tools"
-    echo "  srk9-list-functions         # List all commands"
     echo ""
-    echo "Run: fish"
-    echo "Then: srk9-bootstrap"
+    echo "Start using:"
+    echo "  fish                        # Enter Fish shell"
+    echo "  srk9-help                   # View available commands"
     echo ""
 '
