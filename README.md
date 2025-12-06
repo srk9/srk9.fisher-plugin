@@ -2,7 +2,17 @@
 
 Fisher plugin for bootstrapping and syncing srk9 environments.
 
-## Installation
+## Quick Install (One-Liner)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/srk9/srk9.bootstrapper/master/install.sh | bash
+```
+
+This installs Homebrew, Fish, Fisher, and the srk9-bootstrapper plugin automatically.
+
+## Manual Installation
+
+If you already have Fish and Fisher installed:
 
 ```fish
 fisher install srk9/srk9.bootstrapper
